@@ -7,7 +7,7 @@
 CRGB leds[NUM_LEDS];
 
 int delayTime = 50;
-int tailLength = 1;              // короткий хвост
+int tailLength = 1;
 bool directionRight = true;
 bool lastButtonState = HIGH;
 
@@ -15,14 +15,14 @@ void setup() {
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS);
   FastLED.clear();
   FastLED.show();
-  pinMode(BUTTON_PIN, INPUT_PULLUP);  // кнопка между D2 и GND
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 }
 
 void loop() {
   bool buttonState = digitalRead(BUTTON_PIN);
   if (buttonState == LOW && lastButtonState == HIGH) {
     directionRight = !directionRight;
-    delay(200); // антидребезг
+    delay(20); // антидребезг
   }
   lastButtonState = buttonState;
 
@@ -42,13 +42,19 @@ void loop() {
 }
 
 void drawTail(int head, bool dir) {
-  fadeToBlackBy(leds, NUM_LEDS, 80); // плавное угасание хвоста
+  // сначала задаём базовые цвета
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if (i < 5) leds[i] = CRGB::Red;                // левая сторона
+    else if (i >= NUM_LEDS - 5) leds[i] = CRGB::Green; // правая сторона
+    else leds[i] = CRGB::Black;                    // середина — чёрная
+  }
 
+  // рисуем синий бегущий огонёк с хвостом
   for (int t = 0; t <= tailLength; t++) {
     int pos = dir ? head - t : head + t;
     if (pos >= 0 && pos < NUM_LEDS) {
       uint8_t brightness = 255 - (200 / (tailLength + 1)) * t;
-      leds[pos] = CHSV(160, 255, brightness); // синий (H=160)
+      leds[pos] = CHSV(160, 255, brightness); // синий
     }
   }
 
@@ -61,7 +67,7 @@ bool checkButton() {
   if (state == LOW && lastButtonState == HIGH) {
     directionRight = !directionRight;
     lastButtonState = state;
-    delay(200);
+    delay(20);
     return true;
   }
   lastButtonState = state;
